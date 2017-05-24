@@ -5,7 +5,7 @@ process = cms.Process("TrigAna")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 readFiles = cms.untracked.vstring()
 process.source = cms.Source("PoolSource", fileNames = readFiles)
@@ -359,7 +359,7 @@ readFiles.extend( [
 '/store/data/Run2016D/SinglePhoton/MINIAOD/PromptReco-v2/000/276/811/00000/DE59F729-A94C-E611-B516-02163E011946.root',
 '/store/data/Run2016D/SinglePhoton/MINIAOD/PromptReco-v2/000/276/811/00000/ECAD8525-A94C-E611-AB12-02163E01389A.root' ] );
 
-process.demo = cms.EDAnalyzer("EGTriggerAnalyzer",
+process.demo = cms.EDAnalyzer("TriggerAnalyzer",
     bits = cms.InputTag("TriggerResults","","HLT"),
     prescales = cms.InputTag("patTrigger"),
     objects = cms.InputTag("selectedPatTrigger"),

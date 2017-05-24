@@ -80,6 +80,8 @@ class TriggerAnalyzer : public edm::EDAnalyzer  {
       edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 
       vector<trigger_listing> found_triggers_;
+      bool track_lumis_;
+      string str_to_find_;
 };
 
 
@@ -92,6 +94,8 @@ TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
    triggerObjects_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("objects"))),
    triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales")))
 {
+   track_lumis_ = false;
+   str_to_find_ = "HLT_Photon";
 }
 
 
@@ -119,13 +123,12 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    iEvent.getByToken(triggerObjects_, triggerObjects);
    iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
-   string str_to_find = "HLT_Photon";
    const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
    for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
    {
      string triggerName = names.triggerName(i);
      int ps = triggerPrescales->getPrescaleForIndex(i);
-     std::size_t found = triggerName.find(str_to_find);
+     std::size_t found = triggerName.find(str_to_find_);
      if ( found==std::string::npos )
        continue;
      //check if trigger is already in list
@@ -146,7 +149,8 @@ bool TriggerAnalyzer::have_and_inc_trigger(string iName, int iPrescale, int iRun
       // increment event count
       found_triggers_[i].event_count++;
       // add to lumi list
-      found_triggers_[i].lumis.insert(iLumi);
+      if(track_lumis_)
+        found_triggers_[i].lumis.insert(iLumi);
       return true;
     }
   }
@@ -169,8 +173,9 @@ bool TriggerAnalyzer::have_trigger(string iName, int iPrescale, int iRun, int iL
 
 void TriggerAnalyzer::add_trigger(string iName, int iPrescale, int iRun, int iLumi)
 {
-  struct trigger_listing trig = { .name = iName, .prescale = iPrescale, .run = iRun, .event_count = 0 };
-  trig.lumis.insert(iLumi);
+  struct trigger_listing trig = { .name = iName, .prescale = iPrescale, .run = iRun, .event_count = 1 };
+  if(track_lumis_)
+    trig.lumis.insert(iLumi);
   found_triggers_.push_back(trig);
 }
 

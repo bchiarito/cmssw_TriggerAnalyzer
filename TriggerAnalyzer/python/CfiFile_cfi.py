@@ -1,4 +1,4 @@
 import FWCore.ParameterSet.Config as cms
 
-demo = cms.EDAnalyzer('EGTriggerAnalyzer'
+demo = cms.EDAnalyzer('TriggerAnalyzer'
 )
