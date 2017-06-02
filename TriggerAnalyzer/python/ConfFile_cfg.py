@@ -5,7 +5,7 @@ process = cms.Process("TrigAna")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 
 readFiles = cms.untracked.vstring()
 process.source = cms.Source("PoolSource", fileNames = readFiles)

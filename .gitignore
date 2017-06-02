@@ -1,4 +1,3 @@
-TriggerAnalyzer/test/photondata2016full_crab3jobs/
-TriggerAnalyzer/**/*.pyc
-TriggerAnalyzer/test/photondata2016_crab3jobs/
+*_crab3jobs/
+*.pyc
 TriggerAnalyzer/test/crab.log

@@ -33,6 +33,8 @@
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+
 #include <string>
 #include <iostream>
 //
@@ -48,6 +50,8 @@
 using std::string;
 using std::vector;
 using std::set;
+using std::cout;
+using std::endl;
 
 struct trigger_listing {
   string name;
@@ -82,6 +86,9 @@ class TriggerAnalyzer : public edm::EDAnalyzer  {
       vector<trigger_listing> found_triggers_;
       bool track_lumis_;
       string str_to_find_;
+
+      string processName_; // process name of (HLT) process for which to get HLT configuration
+      HLTConfigProvider hltConfig_;
 };
 
 
@@ -96,6 +103,7 @@ TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
 {
    track_lumis_ = false;
    str_to_find_ = "HLT_Photon";
+   processName_ = "*";
 }
 
 
@@ -111,6 +119,21 @@ void
 TriggerAnalyzer::beginRun(edm::Run const & iRun, edm::EventSetup const& iSetup)
 {
   std::cerr << "entering beginRun()" << std::endl;
+
+  // HLTConfigProvider
+  bool changed(true);
+  if (hltConfig_.init(iRun,iSetup,processName_,changed)) {
+    if (changed) {
+     // The HLT config has actually changed wrt the previous Run, hence rebook your
+     // histograms or do anything else dependent on the revised HLT config
+     // ...  
+    }
+  } else {
+    // if init returns FALSE, initialisation has NOT succeeded, which indicates a problem
+    // with the file and/or code and needs to be investigated!
+    cout << " HLT config extraction failure with process name " << processName_ << endl;
+    // In this case, all access methods will return empty values!
+  }
 }
 
 void
@@ -137,6 +160,11 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      //if not add to list
      add_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock());
    }
+
+   cout << hltConfig_.moduleType("hltEgammaEcalPFClusterIso") << endl;
+   cout << hltConfig_.moduleType("hltEgammaHcalPFClusterIso") << endl;
+   cout << hltConfig_.moduleType("hltEgammaHollowTrackIso") << endl;
+  
 }
 
 bool TriggerAnalyzer::have_and_inc_trigger(string iName, int iPrescale, int iRun, int iLumi)
