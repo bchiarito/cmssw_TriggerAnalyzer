@@ -164,6 +164,11 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    cout << hltConfig_.moduleType("hltEgammaEcalPFClusterIso") << endl;
    cout << hltConfig_.moduleType("hltEgammaHcalPFClusterIso") << endl;
    cout << hltConfig_.moduleType("hltEgammaHollowTrackIso") << endl;
+   cout << hltConfig_.moduleType("hltParticleFlowClusterECALL1Seeded") << endl;
+   cout << hltConfig_.moduleType("hltParticleFlowClusterPSL1Seeded") << endl;
+   cout << hltConfig_.moduleType("hltParticleFlowClusterECALUncorrectedL1Seeded") << endl;
+   cout << hltConfig_.moduleType("hltParticleFlowRecHitPSL1Seeded") << endl;
+   cout << hltConfig_.moduleType("hltParticleFlowRecHitECALL1Seeded") << endl;
   
 }
 
