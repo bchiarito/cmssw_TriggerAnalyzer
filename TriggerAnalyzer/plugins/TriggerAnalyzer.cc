@@ -169,7 +169,27 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    cout << hltConfig_.moduleType("hltParticleFlowClusterECALUncorrectedL1Seeded") << endl;
    cout << hltConfig_.moduleType("hltParticleFlowRecHitPSL1Seeded") << endl;
    cout << hltConfig_.moduleType("hltParticleFlowRecHitECALL1Seeded") << endl;
-  
+   cout << hltConfig_.moduleType("hltRechitInRegionsECAL") << endl; 
+   cout << hltConfig_.moduleType("hltCaloStage2Digis") << endl; 
+   cout << hltConfig_.moduleType("hltEgammaHoverE") << endl; 
+   cout << hltConfig_.moduleType("hltEgammaHcalPFClusterIso") << endl; 
+   cout << hltConfig_.moduleType("hltParticleFlowClusterHBHEForEgamma") << endl; 
+   cout << hltConfig_.moduleType("hltParticleFlowRecHitHBHEForEgamma") << endl; 
+   cout << hltConfig_.moduleType("hltHbhereco") << endl; 
+   cout << hltConfig_.moduleType("hltHcalDigis") << endl; 
+   cout << hltConfig_.moduleType("") << endl; 
+   cout << hltConfig_.moduleType("hltEgammaHollowTrackIso") << endl; 
+   cout << hltConfig_.moduleType("hltIter2MergedForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter1MergedForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter2PFlowTrackSelectionHighPurityForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter0PFlowTrackSelectionHighPurityForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter0PFlowCtfWithMaterialTracksForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityLooseForPhotons") << endl; 
+   cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityTightForPhotons") << endl; 
+   cout << hltConfig_.moduleType("") << endl; 
+   cout << hltConfig_.moduleType("hltEgammaR9ID") << endl; 
+   cout << hltConfig_.moduleType("") << endl; 
 }
 
 bool TriggerAnalyzer::have_and_inc_trigger(string iName, int iPrescale, int iRun, int iLumi)
