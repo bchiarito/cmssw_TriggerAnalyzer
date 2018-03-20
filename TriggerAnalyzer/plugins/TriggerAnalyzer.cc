@@ -41,12 +41,6 @@
 // class declaration
 //
 
-// If the analyzer does not use TFileService, please remove
-// the template argument to the base class so the class inherits
-// from  edm::one::EDAnalyzer<> and also remove the line from
-// constructor "usesResource("TFileService");"
-// This will improve performance in multithreaded jobs.
-
 using std::string;
 using std::vector;
 using std::set;
@@ -102,7 +96,7 @@ TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
    triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales")))
 {
    track_lumis_ = false;
-   str_to_find_ = "HLT_Photon";
+   str_to_find_ = "HLT_DoubleMedium";
    processName_ = "*";
 }
 
@@ -161,7 +155,7 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      add_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock());
    }
 
-   cout << hltConfig_.moduleType("hltEgammaEcalPFClusterIso") << endl;
+   /*cout << hltConfig_.moduleType("hltEgammaEcalPFClusterIso") << endl;
    cout << hltConfig_.moduleType("hltEgammaHcalPFClusterIso") << endl;
    cout << hltConfig_.moduleType("hltEgammaHollowTrackIso") << endl;
    cout << hltConfig_.moduleType("hltParticleFlowClusterECALL1Seeded") << endl;
@@ -189,7 +183,7 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityTightForPhotons") << endl; 
    cout << hltConfig_.moduleType("") << endl; 
    cout << hltConfig_.moduleType("hltEgammaR9ID") << endl; 
-   cout << hltConfig_.moduleType("") << endl; 
+   cout << hltConfig_.moduleType("") << endl; */
 }
 
 bool TriggerAnalyzer::have_and_inc_trigger(string iName, int iPrescale, int iRun, int iLumi)
