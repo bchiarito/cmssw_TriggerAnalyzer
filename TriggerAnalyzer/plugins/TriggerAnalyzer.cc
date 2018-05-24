@@ -77,12 +77,12 @@ class TriggerAnalyzer : public edm::EDAnalyzer  {
       edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjects_;
       edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 
-      vector<trigger_listing> found_triggers_;
-      bool track_lumis_;
-      string str_to_find_;
+      vector<trigger_listing> foundTriggers;
+      bool trackLumis;
+      string triggerString;
 
-      string processName_; // process name of (HLT) process for which to get HLT configuration
-      HLTConfigProvider hltConfig_;
+      string processName; // process name of (HLT) process for which to get HLT configuration
+      HLTConfigProvider hltConfig;
 };
 
 
@@ -93,39 +93,29 @@ TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
 :
    triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
    triggerObjects_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("objects"))),
-   triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales")))
+   triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
+   trackLumis(iConfig.getUntrackedParameter<bool>("trackLumis")),
+   triggerString(iConfig.getUntrackedParameter<string>("triggerString"))
 {
-   track_lumis_ = false;
-   str_to_find_ = "HLT_DoubleMedium";
-   processName_ = "*";
+   processName = "*";
 }
 
 
 TriggerAnalyzer::~TriggerAnalyzer()
 {
  
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
 }
 
 void
 TriggerAnalyzer::beginRun(edm::Run const & iRun, edm::EventSetup const& iSetup)
 {
-  std::cerr << "entering beginRun()" << std::endl;
-
-  // HLTConfigProvider
   bool changed(true);
-  if (hltConfig_.init(iRun,iSetup,processName_,changed)) {
+  if (hltConfig.init(iRun,iSetup,processName,changed)) {
     if (changed) {
-     // The HLT config has actually changed wrt the previous Run, hence rebook your
-     // histograms or do anything else dependent on the revised HLT config
-     // ...  
+     // The HLT config has actually changed wrt the previous Run, hence rebook histos, etc
     }
   } else {
-    // if init returns FALSE, initialisation has NOT succeeded, which indicates a problem
-    // with the file and/or code and needs to be investigated!
-    cout << " HLT config extraction failure with process name " << processName_ << endl;
+    cout << " HLT config extraction failure with process name " << processName << endl;
     // In this case, all access methods will return empty values!
   }
 }
@@ -133,71 +123,41 @@ TriggerAnalyzer::beginRun(edm::Run const & iRun, edm::EventSetup const& iSetup)
 void
 TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-   edm::Handle<edm::TriggerResults> triggerBits;
-   edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
-   edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
-   iEvent.getByToken(triggerBits_, triggerBits);
-   iEvent.getByToken(triggerObjects_, triggerObjects);
-   iEvent.getByToken(triggerPrescales_, triggerPrescales);
+  edm::Handle<edm::TriggerResults> triggerBits;
+  edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
+  iEvent.getByToken(triggerBits_, triggerBits);
+  iEvent.getByToken(triggerObjects_, triggerObjects);
+  iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
-   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-   for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
-   {
-     string triggerName = names.triggerName(i);
-     int ps = triggerPrescales->getPrescaleForIndex(i);
-     std::size_t found = triggerName.find(str_to_find_);
-     if ( found==std::string::npos )
-       continue;
-     //check if trigger is already in list
-     if( have_and_inc_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock()) )
-       continue;
-     //if not add to list
-     add_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock());
-   }
-
-   /*cout << hltConfig_.moduleType("hltEgammaEcalPFClusterIso") << endl;
-   cout << hltConfig_.moduleType("hltEgammaHcalPFClusterIso") << endl;
-   cout << hltConfig_.moduleType("hltEgammaHollowTrackIso") << endl;
-   cout << hltConfig_.moduleType("hltParticleFlowClusterECALL1Seeded") << endl;
-   cout << hltConfig_.moduleType("hltParticleFlowClusterPSL1Seeded") << endl;
-   cout << hltConfig_.moduleType("hltParticleFlowClusterECALUncorrectedL1Seeded") << endl;
-   cout << hltConfig_.moduleType("hltParticleFlowRecHitPSL1Seeded") << endl;
-   cout << hltConfig_.moduleType("hltParticleFlowRecHitECALL1Seeded") << endl;
-   cout << hltConfig_.moduleType("hltRechitInRegionsECAL") << endl; 
-   cout << hltConfig_.moduleType("hltCaloStage2Digis") << endl; 
-   cout << hltConfig_.moduleType("hltEgammaHoverE") << endl; 
-   cout << hltConfig_.moduleType("hltEgammaHcalPFClusterIso") << endl; 
-   cout << hltConfig_.moduleType("hltParticleFlowClusterHBHEForEgamma") << endl; 
-   cout << hltConfig_.moduleType("hltParticleFlowRecHitHBHEForEgamma") << endl; 
-   cout << hltConfig_.moduleType("hltHbhereco") << endl; 
-   cout << hltConfig_.moduleType("hltHcalDigis") << endl; 
-   cout << hltConfig_.moduleType("") << endl; 
-   cout << hltConfig_.moduleType("hltEgammaHollowTrackIso") << endl; 
-   cout << hltConfig_.moduleType("hltIter2MergedForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter1MergedForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter2PFlowTrackSelectionHighPurityForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter0PFlowTrackSelectionHighPurityForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter0PFlowCtfWithMaterialTracksForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityLooseForPhotons") << endl; 
-   cout << hltConfig_.moduleType("hltIter1PFlowTrackSelectionHighPurityTightForPhotons") << endl; 
-   cout << hltConfig_.moduleType("") << endl; 
-   cout << hltConfig_.moduleType("hltEgammaR9ID") << endl; 
-   cout << hltConfig_.moduleType("") << endl; */
+  const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+  for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
+  {
+    string triggerName = names.triggerName(i);
+    int ps = triggerPrescales->getPrescaleForIndex(i);
+    std::size_t found = triggerName.find(triggerString);
+    if ( found==std::string::npos )
+      continue;
+    // check if trigger is already in list
+    if( have_and_inc_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock()) )
+      continue;
+    // if not add to list
+    add_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock());
+  }
 }
 
 bool TriggerAnalyzer::have_and_inc_trigger(string iName, int iPrescale, int iRun, int iLumi)
 {
-  for(unsigned int i = 0; i < found_triggers_.size(); i++)
+  for(unsigned int i = 0; i < foundTriggers.size(); i++)
   {
-    if( (found_triggers_[i].name == iName) &&
-        (found_triggers_[i].prescale == iPrescale) &&
-        (found_triggers_[i].run == iRun) ) {
+    if( (foundTriggers[i].name == iName) &&
+        (foundTriggers[i].prescale == iPrescale) &&
+        (foundTriggers[i].run == iRun) ) {
       // increment event count
-      found_triggers_[i].event_count++;
+      foundTriggers[i].event_count++;
       // add to lumi list
-      if(track_lumis_)
-        found_triggers_[i].lumis.insert(iLumi);
+      if(trackLumis)
+        foundTriggers[i].lumis.insert(iLumi);
       return true;
     }
   }
@@ -206,11 +166,11 @@ bool TriggerAnalyzer::have_and_inc_trigger(string iName, int iPrescale, int iRun
 
 bool TriggerAnalyzer::have_trigger(string iName, int iPrescale, int iRun, int iLumi=0)
 {
-  for(unsigned int i = 0; i < found_triggers_.size(); i++)
+  for(unsigned int i = 0; i < foundTriggers.size(); i++)
   {
-    if( (found_triggers_[i].name == iName) &&
-        (found_triggers_[i].prescale == iPrescale) &&
-        (found_triggers_[i].run == iRun) ) {
+    if( (foundTriggers[i].name == iName) &&
+        (foundTriggers[i].prescale == iPrescale) &&
+        (foundTriggers[i].run == iRun) ) {
       return true;
     }
   }
@@ -221,44 +181,74 @@ bool TriggerAnalyzer::have_trigger(string iName, int iPrescale, int iRun, int iL
 void TriggerAnalyzer::add_trigger(string iName, int iPrescale, int iRun, int iLumi)
 {
   struct trigger_listing trig = { .name = iName, .prescale = iPrescale, .run = iRun, .event_count = 1 };
-  if(track_lumis_)
+  if(trackLumis)
     trig.lumis.insert(iLumi);
-  found_triggers_.push_back(trig);
+  foundTriggers.push_back(trig);
 }
 
-// ------------ method called once each job just before starting event loop  ------------
 void 
 TriggerAnalyzer::beginJob()
 {
 }
 
-// ------------ method called once each job just after ending the event loop  ------------
 void 
 TriggerAnalyzer::endJob() 
 {
-  std::cerr << "entering endJob()" << std::endl;
-
-  for(unsigned int i = 0; i < found_triggers_.size(); i++)
+  cout << "found trigger list" << endl;
+  for(unsigned int i = 0; i < foundTriggers.size(); i++)
   {
-    std::cout << "Name: " << found_triggers_[i].name;
-    std::cout << " PS: " << found_triggers_[i].prescale;
-    std::cout << " Run: " << found_triggers_[i].run;
-    std::cout << " EventCount: " << found_triggers_[i].event_count;
-    std::cout << " Lumis: ";
-    for (set<int>::iterator it = found_triggers_[i].lumis.begin(); it != found_triggers_[i].lumis.end(); ++it)
-      std::cout << ',' << *it;
-    std::cout << std::endl;
+    cout << "Name: " << foundTriggers[i].name;
+    cout << " PS: " << foundTriggers[i].prescale;
+    cout << " Run: " << foundTriggers[i].run;
+    cout << " EventCount: " << foundTriggers[i].event_count;
+    cout << " Lumis: ";
+    for (set<int>::iterator it = foundTriggers[i].lumis.begin(); it != foundTriggers[i].lumis.end(); ++it)
+      cout << *it << ',';
+    cout << endl;
+
+    using std::setw;
+    cout << "modules:" << endl;
+    vector<string> modules = hltConfig.moduleLabels(foundTriggers[i].name);
+    for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      string name = *it;
+      if (hltConfig.moduleEDMType(name) != "EDProducer") continue;
+      cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
+      cout << (hltConfig.modulePSet(name)).dump() << endl;
+    }
+
+    for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      string name = *it;
+      if (hltConfig.moduleEDMType(name) != "EDFilter") continue;
+      cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
+      cout << (hltConfig.modulePSet(name)).dump() << endl;
+    }
+
+    for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      string name = *it;
+      if (hltConfig.moduleEDMType(name) == "EDFilter") continue;
+      if (hltConfig.moduleEDMType(name) == "EDProducer") continue;
+      cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
+    }
   }
+
+  cout << hltConfig.moduleType("hltL1fL1sMu18L1Filtered0") << endl;
 }
 
-// ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
 TriggerAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
-  //The following says we do not know what parameters are allowed so do no validation
-  // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
-  desc.setUnknown();
-  descriptions.addDefault(desc);
+
+  // triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
+  // triggerObjects_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("objects"))),
+  // triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
+  // config parameters
+  desc.addUntracked<bool>("trackLumis", false);
+  desc.addUntracked<string>("triggerString", "HLT_");
+  desc.add<edm::InputTag>("bits");
+  desc.add<edm::InputTag>("objects");
+  desc.add<edm::InputTag>("prescales");
+
+  descriptions.add("TriggerAnalyzer", desc);
 }
 
 //define this as a plug-in

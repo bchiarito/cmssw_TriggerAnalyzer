@@ -1,3 +1,4 @@
 *_crab3jobs/
 *.pyc
 TriggerAnalyzer/test/crab.log
+__init__.py
