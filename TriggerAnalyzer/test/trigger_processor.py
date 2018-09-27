@@ -15,31 +15,31 @@ collect = False
 num_files = 0
 sys.stdout.write('found ')
 for root, dirs, filenames in os.walk(path):
-  num_files += len(fnmatch.filter(filenames, 'cmsRun-stdout-*.log'))
-  if len(fnmatch.filter(filenames, 'cmsRun-stdout-*.log')) > 0:
-    sys.stdout.write(str(len(fnmatch.filter(filenames, 'cmsRun-stdout-*.log'))))
-    sys.stdout.write(",")
-    sys.stdout.flush()
-  for filename in fnmatch.filter(filenames, 'cmsRun-stdout-*.log'):
-    stdout = open(os.path.join(root, filename))
-    #stdout = open(stdout_file)
-    for line in stdout:
-      if line.split() == []:
-	continue
-      if line.split()[0] == "TimeReport>":
-	collect = False
-	continue
-      if collect:
-	contents = line.split()
-	name = contents[1]
-	ps = contents[3]
-	run = contents[5]
-	nevents = contents[7]
-	triggers.append((name, ps, run, nevents))
-	continue
-      if line == "entering endJob()\n":
-	collect = True
-	continue
+  if not 'failed' in root:
+    num_files += len(fnmatch.filter(filenames, 'cmsRun-stdout-*.log'))
+    if len(fnmatch.filter(filenames, 'cmsRun-stdout-*.log')) > 0:
+      sys.stdout.write(str(len(fnmatch.filter(filenames, 'cmsRun-stdout-*.log'))))
+      sys.stdout.write(",")
+      sys.stdout.flush()
+    for filename in fnmatch.filter(filenames, 'cmsRun-stdout-*.log'):
+      stdout = open(os.path.join(root, filename))
+      #stdout = open(stdout_file)
+      for line in stdout:
+        if line.split() == []:
+          continue
+        if not line.split()[0] == "Name:":
+          collect = False
+          continue
+        if line.split()[0] == "Name:":
+          collect = True
+        if collect:
+          contents = line.split()
+          name = contents[1]
+          ps = contents[3]
+          run = contents[5]
+          nevents = contents[7]
+          triggers.append((name, ps, run, nevents))
+          continue
 sys.stdout.write(" files.\n")
 sys.stdout.flush()
 print "found", num_files, "total files."
@@ -50,7 +50,7 @@ if len(triggers) >= 1:
 else:
   print "done collecting, no entries!"
 
-outfile = open("list_triggers.txt", "w")
+outfile = open("raw_triggers.txt", "w")
 for trigger in triggers:
   outfile.write(trigger[0]+" "+trigger[1]+" "+trigger[2]+" "+trigger[3]+"\n")
 outfile.close()
@@ -64,17 +64,19 @@ for trigger in triggers:
     found_in_list = False
     for entry in query:
       trig_name = trigger[0]
-      trig_name = trig_name[:trig_name.rfind('_v')]
+      #trig_name = trig_name[:trig_name.rfind('_v')]
       if entry[0] == trig_name:
-	# in list, then update entry
-	entry[1] = int(entry[1])+int(trigger[3])
-	found_in_list = True
+	      # in list, then update entry
+	      entry[1] = int(entry[1])+int(trigger[3])
+	      found_in_list = True
     if not found_in_list:
       # add to list
       trig_name = trigger[0]
-      trig_name = trig_name[:trig_name.rfind('_v')]
+      #trig_name = trig_name[:trig_name.rfind('_v')]
       query.append( [trig_name , int(trigger[3])] )
 
 print "computed", len(query), "trigger names matching query"
+print 'trigger name : total events'
 for entry in query:
-  print entry[0], ",", entry[1], "total events"
+  print '{} : {:d}'.format(entry[0], entry[1])
+  #print entry[0], ",", entry[1], "total events"

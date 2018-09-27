@@ -1,0 +1,17 @@
+step 1:
+Run the trigger analyzer over a dataset with crab
+use the command line option
+  searchString='HLT_'
+to set which trigger names are saved
+
+step 2:
+untar the cmsRun_#.log.tar.gz files. Get these using crab getlog, or directly on the output locatoin
+$ python untar_results.py <dir>
+
+step 3:
+run the analyzer script
+$ python trigger_processor.py <dir>
+
+
+
+
