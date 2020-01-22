@@ -6,6 +6,7 @@ options.register("searchString", 'HLT_', VarParsing.multiplicity.singleton, VarP
 options.register("input", 'file:./my_file.root', VarParsing.multiplicity.singleton, VarParsing.varType.string, "")
 options.register("trackLumis", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("analyzeObjects", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("mode", 1, VarParsing.multiplicity.singleton, VarParsing.varType.int, "")
 options.setDefault('maxEvents', 100)
 options.parseArguments()
 
@@ -31,6 +32,7 @@ process.ana = cms.EDAnalyzer("TriggerAnalyzer",
     triggerString = cms.untracked.string(options.searchString),
     trackLumis = cms.untracked.bool(options.trackLumis),
     analyzeObjects = cms.untracked.bool(options.analyzeObjects),
+    mode = cms.untracked.int32(options.mode),
 )
 
 process.p = cms.Path(process.ana)
