@@ -78,10 +78,13 @@ class TriggerAnalyzer : public edm::EDAnalyzer  {
       edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
 
       vector<trigger_listing> foundTriggers;
+
+      // _cfg file options
       bool trackLumis;
       bool analyzeObjects;
       bool analyzeModules;
       string triggerString;
+      int mode; // 1 = scan for unprescaled
 
       string processName; // process name of (HLT) process for which to get HLT configuration
       HLTConfigProvider hltConfig;
@@ -99,7 +102,8 @@ TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
    trackLumis(iConfig.getUntrackedParameter<bool>("trackLumis")),
    analyzeObjects(iConfig.getUntrackedParameter<bool>("analyzeObjects")),
    analyzeModules(iConfig.getUntrackedParameter<bool>("analyzeModules")),
-   triggerString(iConfig.getUntrackedParameter<string>("triggerString"))
+   triggerString(iConfig.getUntrackedParameter<string>("triggerString")),
+   mode(iConfig.getUntrackedParameter<int>("mode"))
 {
    processName = "*";
 }
@@ -135,18 +139,22 @@ TriggerAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-  for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
-  {
-    string triggerName = names.triggerName(i);
-    int ps = triggerPrescales->getPrescaleForIndex(i);
-    std::size_t found = triggerName.find(triggerString);
-    if ( found==std::string::npos )
-      continue;
-    // check if trigger is already in list
-    if( have_and_inc_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock()) )
-      continue;
-    // if not add to list
-    add_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock());
+
+  if (mode == 1) {
+    for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
+    {
+      string triggerName = names.triggerName(i);
+      int ps = triggerPrescales->getPrescaleForIndex(i);
+      if (ps != 1) continue;
+      std::size_t found = triggerName.find(triggerString);
+      if ( found==std::string::npos )
+        continue;
+      // check if trigger is already in list
+      if( have_and_inc_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock()) )
+        continue;
+      // if not add to list
+      add_trigger(triggerName, ps, iEvent.id().run(), iEvent.id().luminosityBlock());
+    }
   }
 
 
@@ -300,6 +308,7 @@ TriggerAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
   desc.addUntracked<bool>("analyzeObjects", false);
   desc.addUntracked<bool>("analyzeModules", false);
   desc.addUntracked<string>("triggerString", "HLT_");
+  desc.addUntracked<int>("mode", 1);
   desc.add<edm::InputTag>("bits");
   desc.add<edm::InputTag>("objects");
   desc.add<edm::InputTag>("prescales");
