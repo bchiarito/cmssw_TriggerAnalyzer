@@ -5,7 +5,7 @@ use the command line option
 to set which trigger names are saved
 
 step 2:
-untar the cmsRun_#.log.tar.gz files. Get these using crab getlog, or directly on the output locatoin
+untar the cmsRun_#.log.tar.gz files. Get these using crab getlog, or directly on the output location
 $ python untar_results.py <dir>
 
 step 3:

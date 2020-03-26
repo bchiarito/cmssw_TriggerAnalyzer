@@ -80,6 +80,7 @@ class TriggerAnalyzer : public edm::EDAnalyzer  {
       vector<trigger_listing> foundTriggers;
       bool trackLumis;
       bool analyzeObjects;
+      bool analyzeModules;
       string triggerString;
 
       string processName; // process name of (HLT) process for which to get HLT configuration
@@ -97,6 +98,7 @@ TriggerAnalyzer::TriggerAnalyzer(const edm::ParameterSet& iConfig)
    triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
    trackLumis(iConfig.getUntrackedParameter<bool>("trackLumis")),
    analyzeObjects(iConfig.getUntrackedParameter<bool>("analyzeObjects")),
+   analyzeModules(iConfig.getUntrackedParameter<bool>("analyzeModules")),
    triggerString(iConfig.getUntrackedParameter<string>("triggerString"))
 {
    processName = "*";
@@ -235,7 +237,7 @@ TriggerAnalyzer::beginJob()
 void 
 TriggerAnalyzer::endJob() 
 {
-  for(unsigned int i = 0; i < foundTriggers.size(); i++)
+  /*for(unsigned int i = 0; i < foundTriggers.size(); i++)
   {
     cout << "Name: " << foundTriggers[i].name;
     cout << " PS: " << foundTriggers[i].prescale;
@@ -244,7 +246,7 @@ TriggerAnalyzer::endJob()
     cout << endl;
   }
 
-  return;
+  return;*/
   cout << "found trigger list" << endl;
   for(unsigned int i = 0; i < foundTriggers.size(); i++)
   {
@@ -257,32 +259,36 @@ TriggerAnalyzer::endJob()
       cout << *it << ',';
     cout << endl;
 
-    using std::setw;
-    cout << "modules:" << endl;
-    vector<string> modules = hltConfig.moduleLabels(foundTriggers[i].name);
-    for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
-      string name = *it;
-      if (hltConfig.moduleEDMType(name) != "EDProducer") continue;
-      cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
-      cout << (hltConfig.modulePSet(name)).dump() << endl;
+    if (analyzeModules)
+    { 
+      using std::setw;
+      cout << "modules:" << endl;
+      vector<string> modules = hltConfig.moduleLabels(foundTriggers[i].name);
+      for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+        string name = *it;
+        if (hltConfig.moduleEDMType(name) != "EDProducer") continue;
+        cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
+        cout << (hltConfig.modulePSet(name)).dump() << endl;
+      }
+
+      for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+        string name = *it;
+        if (hltConfig.moduleEDMType(name) != "EDFilter") continue;
+        cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
+        cout << (hltConfig.modulePSet(name)).dump() << endl;
+      }
+
+      for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+        string name = *it;
+        if (hltConfig.moduleEDMType(name) == "EDFilter") continue;
+        if (hltConfig.moduleEDMType(name) == "EDProducer") continue;
+        cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
+      }
     }
 
-    for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
-      string name = *it;
-      if (hltConfig.moduleEDMType(name) != "EDFilter") continue;
-      cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
-      cout << (hltConfig.modulePSet(name)).dump() << endl;
-    }
-
-    for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
-      string name = *it;
-      if (hltConfig.moduleEDMType(name) == "EDFilter") continue;
-      if (hltConfig.moduleEDMType(name) == "EDProducer") continue;
-      cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
-    }
+    // print class of individual modules
+    cout << hltConfig.moduleType("hltL1fL1sMu18L1Filtered0") << endl;
   }
-
-  cout << hltConfig.moduleType("hltL1fL1sMu18L1Filtered0") << endl;
 }
 
 void
@@ -292,6 +298,7 @@ TriggerAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
   // config parameters
   desc.addUntracked<bool>("trackLumis", false);
   desc.addUntracked<bool>("analyzeObjects", false);
+  desc.addUntracked<bool>("analyzeModules", false);
   desc.addUntracked<string>("triggerString", "HLT_");
   desc.add<edm::InputTag>("bits");
   desc.add<edm::InputTag>("objects");
