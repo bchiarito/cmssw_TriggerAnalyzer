@@ -55,7 +55,7 @@ struct trigger_listing {
   set<int> lumis;
 };
 
-class TriggerAnalyzer : public edm::EDAnalyzer  {
+class TriggerAnalyzer : public edm::one::EDAnalyzer<>  {
    public:
       explicit TriggerAnalyzer(const edm::ParameterSet&);
       ~TriggerAnalyzer();
@@ -271,22 +271,32 @@ TriggerAnalyzer::endJob()
     { 
       using std::setw;
       cout << "modules:" << endl;
-      vector<string> modules = hltConfig.moduleLabels(foundTriggers[i].name);
-      for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      cout << "sanity" << endl;
+      cout << foundTriggers[i].name << endl;
+      cout << "sanity2" << endl;
+      //const vector<string> modules = hltConfig.moduleLabels(foundTriggers[i].name);
+      const vector<string> modules = hltConfig.moduleLabels(0);
+      cout << "&&&" << endl;
+      cout << modules.size() << endl;
+      //for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      for(auto it = modules.begin(); it != modules.end(); ++it) {
+        cout << "  &&& start" << endl;
         string name = *it;
         if (hltConfig.moduleEDMType(name) != "EDProducer") continue;
         cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
         cout << (hltConfig.modulePSet(name)).dump() << endl;
       }
 
-      for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      for(auto it = modules.begin(); it != modules.end(); ++it) {
+        cout << "  +++ start" << endl;
         string name = *it;
         if (hltConfig.moduleEDMType(name) != "EDFilter") continue;
         cout << setw(80) << name << " : " << setw(40) << hltConfig.moduleType(name) << " : " << setw(15) << hltConfig.moduleEDMType(name) << endl;
         cout << (hltConfig.modulePSet(name)).dump() << endl;
       }
 
-      for(vector<string>::iterator it = modules.begin(); it != modules.end(); ++it) {
+      for(auto it = modules.begin(); it != modules.end(); ++it) {
+        cout << "  === start" << endl;
         string name = *it;
         if (hltConfig.moduleEDMType(name) == "EDFilter") continue;
         if (hltConfig.moduleEDMType(name) == "EDProducer") continue;
@@ -295,7 +305,7 @@ TriggerAnalyzer::endJob()
     }
 
     // print class of individual modules
-    cout << hltConfig.moduleType("hltL1fL1sMu18L1Filtered0") << endl;
+    //cout << hltConfig.moduleType("hltL1fL1sMu18L1Filtered0") << endl;
   }
 }
 
